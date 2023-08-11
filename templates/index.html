@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Economic Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .container {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        .dark-mode {
+            background-color: #333;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h2>World Economic Dashboard</h2>
+        <div class="mt-4">
+            <a href="/comparative" class="btn btn-primary">Go to Comparative Analysis</a>
+        </div>
+        <div class="mt-4">
+            <label for="yearSelect">Select Year:</label>
+            <select id="yearSelect" onchange="fetchData()">
+                <script>
+                    for (let year = 2022; year >= 2019; year--) {
+                        document.write(`<option value="${year}">${year}</option>`);
+                    }
+                </script>
+            </select>
+        </div>
+        <div class="mt-4">
+            <label for="gdpSlider">Minimum GDP (in trillions):</label>
+            <input type="range" id="gdpSlider" min="0" max="30" step="0.5" value="0" onchange="fetchData()">
+            <span id="gdpValue">0</span>
+        </div>
+        <div class="mt-4">
+            <button onclick="toggleTheme()">Toggle Dark Mode</button>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div id="gdpBarPlot" style="width:100%;height:600px;"></div>
+            </div>
+            <div class="col-md-6">
+                <div id="gdpLinePlot" style="width:100%;height:600px;"></div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div id="worldMap" style="width:100%;height:600px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'];
+
+        const iso2ToIso3 = {
+            'US': 'USA',
+            'CN': 'CHN',
+            'JP': 'JPN',
+            'DE': 'DEU',
+            'IN': 'IND',
+            'GB': 'GBR',
+            'FR': 'FRA',
+            'BR': 'BRA',
+            'IT': 'ITA',
+            'CA': 'CAN'
+        };
+        function fetchData() {
+            const year = document.getElementById('yearSelect').value;
+            const minGDP = document.getElementById('gdpSlider').value * 1e12;  // Convert from trillions to actual value
+                fetch(`/api/data/${year}`)
+                    .then(response => response.json())
+                    .then(data => {
+                    const filteredData = data.filter(entry => entry.gdp >= minGDP);
+                    const countryIds = data.map(entry => entry.country_id);
+                    const countryIso3Ids = countryIds.map(code => iso2ToIso3[code] || code);
+                    const labels = filteredData.map(entry => entry.country_name);
+                    const gdps = filteredData.map(entry => entry.gdp);
+                   // const countryIds = filteredData.map(entry => entry.country_id);
+
+                    // Bar Plot
+                    const gdpBarPlotData = {
+                        x: labels,
+                        y: gdps,
+                        type: 'bar',
+                        name: 'GDP',
+                        marker: {
+                            color: 'rgb(58,200,225)',
+                            opacity: 0.7,
+                        }
+                    };
+                    const gdpBarLayout = {
+                        title: 'GDP of Countries in ' + year,
+                        xaxis: {
+                            title: 'Countries',
+                            tickangle: -45
+                        },
+                        yaxis: {
+                            title: 'GDP',
+                            tickformat: '.2s'
+                        }
+                    };
+                    Plotly.newPlot('gdpBarPlot', [gdpBarPlotData], gdpBarLayout);
+
+                    // Line Plot
+                    const gdpAreaPlotData = [];
+                    labels.forEach((country, idx) => {
+                        fetch(`/api/gdp_growth/${filteredData[idx].country_id}`)
+                            .then(resp => resp.json())
+                            .then(growthData => {
+                                gdpAreaPlotData.push({
+                                    x: growthData.map(g => g.year),
+                                    y: growthData.map(g => g.growth_rate),
+                                    fill: 'tozeroy',
+                                    type: 'scatter',
+                                    mode: 'lines',
+                                    name: country,
+                                    line: {
+                                        color: colors[idx]
+                                    }
+                                });
+
+                                if (gdpAreaPlotData.length === labels.length) {
+                                    const gdpAreaLayout = {
+                                        title: 'GDP Growth Rate Over the Years for Top Countries',
+                                        xaxis: {
+                                            title: 'Year'
+                                        },
+                                        yaxis: {
+                                            title: 'GDP Growth Rate (%)'
+                                        }
+                                    };
+                                    Plotly.newPlot('gdpLinePlot', gdpAreaPlotData, gdpAreaLayout);
+                                }
+                            });
+                    });
+
+                    // World Map Visualization
+                        const mapData = [{
+                            type: 'choropleth',
+                            locationmode: 'ISO-3',
+                            locations: countryIso3Ids,
+                            z: gdps,
+                            text: labels,
+                            colorscale: 'Viridis',
+                            autocolorscale: false,
+                            reversescale: true,
+                            marker: {
+                                line: {
+                                    color: 'rgb(180,180,180)',
+                                    width: 0.5
+                                }
+                            },
+                            colorbar: {
+                                title: 'GDP',
+                                tickprefix: '$',
+                                ticksuffix: 'B'
+                            }
+                        }];
+
+                        const mapLayout = {
+                            title: `GDP by Country in ${year}`,
+                            geo: {
+                                showframe: false,
+                                showcoastlines: false,
+                                projection: {
+                                    type: 'mercator'
+                                }
+                            }
+                        };
+
+                        Plotly.newPlot('worldMap', mapData, mapLayout);
+                    })
+                    .catch(error => {
+                        console.log("Fetch error:", error);
+                    });
+            
+        }
+
+        // Script for GDP Slider to show the value
+        document.getElementById('gdpSlider').oninput = function () {
+            document.getElementById('gdpValue').textContent = this.value;
+        }
+
+        // Toggle theme function
+        function toggleTheme() {
+            document.body.classList.toggle("dark-mode");
+        }
+
+        // Fetch data for the initially selected year
+        fetchData();
+    </script>
+</body>
+</html>

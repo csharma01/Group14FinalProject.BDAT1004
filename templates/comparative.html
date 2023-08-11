@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparative Analysis - World Economic Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .container {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        .dark-mode {
+            background-color: #333;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h2>Comparative Analysis</h2>
+        <div class="mt-4 mb-4">
+            <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <label for="country1">Country 1:</label>
+                <select id="country1" onchange="compareCountries()"></select>
+            </div>
+            <div class="col-md-4">
+                <label for="country2">Country 2:</label>
+                <select id="country2" onchange="compareCountries()"></select>
+            </div>
+            <div class="col-md-4">
+                <label for="year">Year:</label>
+                <select id="year" onchange="compareCountries()">
+                    <option value="2019">2019</option>
+                    <option value="2020">2020</option>
+                    <option value="2021">2021</option>
+                    <option value="2022" selected>2022</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h4>GDP Comparison</h4>
+                <div id="barChart" style="width:100%;height:400px;"></div>
+            </div>
+            <div class="col-md-6">
+                <h4>Relative GDP Contribution</h4>
+                <div id="pieChart" style="width:100%;height:400px;"></div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <h4>GDP Growth Rate Trends Over the Years</h4>
+                <div id="lineChart" style="width:100%;height:400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        fetch('/api/countries')
+            .then(response => response.json())
+            .then(data => {
+                const country1Select = document.getElementById('country1');
+                const country2Select = document.getElementById('country2');
+
+                data.forEach((country, index) => {
+                    const optionElement = `<option value="${country.country_id}">${country.country_name}</option>`;
+                    country1Select.innerHTML += optionElement;
+                    country2Select.innerHTML += optionElement;
+
+                    if (index === 0) {
+                        country1Select.value = country.country_id;
+                    } else if (index === 1) {
+                        country2Select.value = country.country_id;
+                    }
+                });
+
+                compareCountries();
+            });
+
+        function plotBarChart(data1, data2) {
+            const trace1 = {
+                x: [data1.country_name],
+                y: [data1.gdp],
+                name: data1.country_name,
+                type: 'bar'
+            };
+
+            const trace2 = {
+                x: [data2.country_name],
+                y: [data2.gdp],
+                name: data2.country_name,
+                type: 'bar'
+            };
+
+            const layout = {
+                title: 'GDP Comparison',
+                barmode: 'group'
+            };
+
+            Plotly.newPlot('barChart', [trace1, trace2], layout);
+        }
+
+        function plotPieChart(data1, data2) {
+            const trace = {
+                labels: [data1.country_name, data2.country_name],
+                values: [data1.gdp, data2.gdp],
+                type: 'pie'
+            };
+
+            const layout = {
+                title: 'Relative GDP Contribution'
+            };
+
+            Plotly.newPlot('pieChart', [trace], layout);
+        }
+
+        function plotGrowthRateTrends(data1, data2) {
+            const trace1 = {
+                x: data1.map(entry => entry.year),
+                y: data1.map(entry => entry.growth_rate),
+                mode: 'lines+markers',
+                name: data1.length > 0 ? data1[0].country_name : 'Country 1'
+            };
+
+            const trace2 = {
+                x: data2.map(entry => entry.year),
+                y: data2.map(entry => entry.growth_rate),
+                mode: 'lines+markers',
+                name: data2.length > 0 ? data2[0].country_name : 'Country 2'
+            };
+
+            const layout = {
+                title: 'GDP Growth Rate Trends',
+                xaxis: { title: 'Year' },
+                yaxis: { title: 'Growth Rate (%)' }
+            };
+
+            Plotly.newPlot('lineChart', [trace1, trace2], layout);
+        }
+
+
+        function compareCountries() {
+            const year = document.getElementById('year').value;
+            const country1Id = document.getElementById('country1').value;
+            const country2Id = document.getElementById('country2').value;
+
+            // Fetch GDP data for the selected year
+            fetch(`/api/data/${year}`)
+                .then(response => response.json())
+                .then(data => {
+                    const country1Data = data.find(entry => entry.country_id === country1Id);
+                    const country2Data = data.find(entry => entry.country_id === country2Id);
+
+                    if (!country1Data || !country2Data) {
+                        throw new Error("Data for one or both countries is missing for the selected year.");
+                    }
+
+                    plotBarChart(country1Data, country2Data);
+                    plotPieChart(country1Data, country2Data);
+
+                    // Fetch growth rate data for both countries
+                    return Promise.all([
+                        fetch(`/api/gdp_growth/${country1Id}`),
+                        fetch(`/api/gdp_growth/${country2Id}`)
+                    ]);
+                })
+                .then(responses => Promise.all(responses.map(resp => resp.json())))
+                .then(([growthData1, growthData2]) => {
+                    plotGrowthRateTrends(growthData1, growthData2);
+                })
+                .catch(error => {
+                    console.error("Error fetching or processing data:", error);
+                });
+        }
+    </script>
+</body>
+</html>
