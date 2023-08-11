@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Bank GDP Data - Charts</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f7f9fc;
+        }
+
+        .header {
+            background-color: #1E2A38;
+            color: #ffffff;
+            padding: 20px 0;
+            text-align: center;
+        }
+
+            .header h1 {
+                font-size: 36px;
+                margin: 0;
+            }
+
+        .navbar {
+            background-color: #1E2A38;
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+            .navbar a {
+                color: #ffffff;
+                text-decoration: none;
+                margin: 0 20px;
+                font-weight: bold;
+                transition: color 0.3s ease;
+            }
+
+                .navbar a:hover {
+                    color: #FF5733;
+                }
+
+        .chart-container {
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+            .chart-container:hover {
+                transform: scale(1.05);
+            }
+
+        #chart-container3 {
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            Charts - World Economic Dashboard
+        </h1>
+    </div>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/comparative">Comparative Analysis</a>
+    </div>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-4 chart-container">
+                <div id="chart-container"></div>
+            </div>
+            <div class="col-md-4 chart-container">
+                <div id="chart-container2"></div>
+            </div>
+            <div class="col-md-4 chart-container">
+                <canvas id="chart-container3"></canvas>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Google Charts
+        google.charts.load('current', { 'packages': ['corechart'] });
+        google.charts.setOnLoadCallback(function () {
+            drawCharts();
+            drawJSChart();
+        });
+
+        function drawCharts() {
+            var jsonData = [
+                ['Country', 'GDP'],
+                ['United States', 25000],
+                ['China', 13000],
+                ['Japan', 5000],
+                ['Germany', 4000],
+                ['India', 3000]
+            ];
+
+            var data = google.visualization.arrayToDataTable(jsonData);
+            var options = {
+                title: 'GDP of Different Countries',
+                chartArea: { width: '60%' },
+                hAxis: {
+                    title: 'GDP',
+                    minValue: 0
+                },
+                vAxis: {
+                    title: 'Country'
+                }
+            };
+
+            var chart = new google.visualization.BarChart(document.getElementById('chart-container'));
+            chart.draw(data, options);
+
+            var jsonData2 = [
+                ['Country', 'Population'],
+                ['United States', 330],
+                ['China', 1441],
+                ['Japan', 126],
+                ['Germany', 83],
+                ['India', 1393]
+            ];
+
+            var data2 = google.visualization.arrayToDataTable(jsonData2);
+            var options2 = {
+                title: 'Population of Different Countries',
+                chartArea: { width: '60%' },
+                hAxis: {
+                    title: 'Population',
+                    minValue: 0
+                },
+                vAxis: {
+                    title: 'Country'
+                }
+            };
+
+            var chart2 = new google.visualization.BarChart(document.getElementById('chart-container2'));
+            chart2.draw(data2, options2);
+        }
+
+        // JavaScript Chart using Chart.js
+        function drawJSChart() {
+            const ctx = document.getElementById('chart-container3').getContext('2d');
+            const myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['United States', 'China', 'Japan', 'Germany', 'India'],
+                    datasets: [{
+                        label: 'CO2 Emissions',
+                        data: [6.67, 10.06, 4.67, 8.88, 2.65],
+                        backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)', 'rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
+                        borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+
+    </script>
+</body>
+</html>

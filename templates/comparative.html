@@ -8,7 +8,58 @@
     <title>Comparative Analysis - World Economic Dashboard</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
     <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f7f9fc;
+        }
+
+        .header {
+            background-color: #1E2A38;
+            color: #ffffff;
+            padding: 20px 0;
+            text-align: center;
+        }
+
+            .header h1 {
+                font-size: 36px;
+                margin: 0;
+            }
+
+        .navbar {
+            background-color: #1E2A38;
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+            .navbar a {
+                color: #ffffff;
+                text-decoration: none;
+                margin: 0 20px;
+                font-weight: bold;
+                transition: color 0.3s ease;
+            }
+
+                .navbar a:hover {
+                    color: #FF5733;
+                }
+
+        .chart-container {
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+            .chart-container:hover {
+                transform: scale(1.05);
+            }
+
         .container {
             padding-left: 5px;
             padding-right: 5px;
@@ -22,12 +73,14 @@
 </head>
 
 <body>
+    <div class="header">
+        <h1>Comparative Analysis - World Economic Dashboard</h1>
+    </div>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/charts">Charts</a>
+    </div>
     <div class="container mt-4">
-        <h2>Comparative Analysis</h2>
-        <div class="mt-4 mb-4">
-            <a href="/" class="btn btn-secondary">Back to Dashboard</a>
-        </div>
-
         <div class="row">
             <div class="col-md-4">
                 <label for="country1">Country 1:</label>
@@ -51,17 +104,17 @@
         <div class="row mt-4">
             <div class="col-md-6">
                 <h4>GDP Comparison</h4>
-                <div id="barChart" style="width:100%;height:400px;"></div>
+                <div id="barChart" class="chart-container" style="height:400px;"></div>
             </div>
             <div class="col-md-6">
                 <h4>Relative GDP Contribution</h4>
-                <div id="pieChart" style="width:100%;height:400px;"></div>
+                <div id="pieChart" class="chart-container" style="height:400px;"></div>
             </div>
         </div>
         <div class="row mt-4">
             <div class="col-md-12">
                 <h4>GDP Growth Rate Trends Over the Years</h4>
-                <div id="lineChart" style="width:100%;height:400px;"></div>
+                <div id="lineChart" class="chart-container" style="height:400px;"></div>
             </div>
         </div>
     </div>

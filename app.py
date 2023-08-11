@@ -123,6 +123,9 @@ def index():
 @app.route('/comparative')
 def comparative():
     return render_template('comparative.html')
+@app.route('/charts')
+def charts():
+    return render_template('charts.html')
 
 
 if __name__ == '__main__':

@@ -3,30 +3,76 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>World Economic Dashboard</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <!-- Styles from charts.html -->
     <style>
-        .container {
-            padding-left: 5px;
-            padding-right: 5px;
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f7f9fc;
         }
 
-        .dark-mode {
-            background-color: #333;
-            color: white;
+        .header {
+            background-color: #1E2A38;
+            color: #ffffff;
+            padding: 20px 0;
+            text-align: center;
         }
+
+            .header h1 {
+                font-size: 36px;
+                margin: 0;
+            }
+
+        .navbar {
+            background-color: #1E2A38;
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+            .navbar a {
+                color: #ffffff;
+                text-decoration: none;
+                margin: 0 20px;
+                font-weight: bold;
+                transition: color 0.3s ease;
+            }
+
+                .navbar a:hover {
+                    color: #FF5733;
+                }
+
+        .chart-container {
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+            .chart-container:hover {
+                transform: scale(1.05);
+            }
     </style>
 </head>
 
 <body>
+    <div class="header">
+        <h1>World Economic Dashboard</h1>
+    </div>
+    <div class="navbar">
+        <a href="/comparative">Comparative Analysis</a>
+        <a href="/charts">Charts</a>
+    </div>
     <div class="container mt-4">
-        <h2>World Economic Dashboard</h2>
-        <div class="mt-4">
-            <a href="/comparative" class="btn btn-primary">Go to Comparative Analysis</a>
-        </div>
         <div class="mt-4">
             <label for="yearSelect">Select Year:</label>
             <select id="yearSelect" onchange="fetchData()">
@@ -41,9 +87,6 @@
             <label for="gdpSlider">Minimum GDP (in trillions):</label>
             <input type="range" id="gdpSlider" min="0" max="30" step="0.5" value="0" onchange="fetchData()">
             <span id="gdpValue">0</span>
-        </div>
-        <div class="mt-4">
-            <button onclick="toggleTheme()">Toggle Dark Mode</button>
         </div>
         <div class="row mt-4">
             <div class="col-md-6">
@@ -78,15 +121,15 @@
         function fetchData() {
             const year = document.getElementById('yearSelect').value;
             const minGDP = document.getElementById('gdpSlider').value * 1e12;  // Convert from trillions to actual value
-                fetch(`/api/data/${year}`)
-                    .then(response => response.json())
-                    .then(data => {
+            fetch(`/api/data/${year}`)
+                .then(response => response.json())
+                .then(data => {
                     const filteredData = data.filter(entry => entry.gdp >= minGDP);
                     const countryIds = data.map(entry => entry.country_id);
                     const countryIso3Ids = countryIds.map(code => iso2ToIso3[code] || code);
                     const labels = filteredData.map(entry => entry.country_name);
                     const gdps = filteredData.map(entry => entry.gdp);
-                   // const countryIds = filteredData.map(entry => entry.country_id);
+                    // const countryIds = filteredData.map(entry => entry.country_id);
 
                     // Bar Plot
                     const gdpBarPlotData = {
@@ -146,55 +189,50 @@
                     });
 
                     // World Map Visualization
-                        const mapData = [{
-                            type: 'choropleth',
-                            locationmode: 'ISO-3',
-                            locations: countryIso3Ids,
-                            z: gdps,
-                            text: labels,
-                            colorscale: 'Viridis',
-                            autocolorscale: false,
-                            reversescale: true,
-                            marker: {
-                                line: {
-                                    color: 'rgb(180,180,180)',
-                                    width: 0.5
-                                }
-                            },
-                            colorbar: {
-                                title: 'GDP',
-                                tickprefix: '$',
-                                ticksuffix: 'B'
+                    const mapData = [{
+                        type: 'choropleth',
+                        locationmode: 'ISO-3',
+                        locations: countryIso3Ids,
+                        z: gdps,
+                        text: labels,
+                        colorscale: 'Viridis',
+                        autocolorscale: false,
+                        reversescale: true,
+                        marker: {
+                            line: {
+                                color: 'rgb(180,180,180)',
+                                width: 0.5
                             }
-                        }];
+                        },
+                        colorbar: {
+                            title: 'GDP',
+                            tickprefix: '$',
+                            ticksuffix: 'B'
+                        }
+                    }];
 
-                        const mapLayout = {
-                            title: `GDP by Country in ${year}`,
-                            geo: {
-                                showframe: false,
-                                showcoastlines: false,
-                                projection: {
-                                    type: 'mercator'
-                                }
+                    const mapLayout = {
+                        title: `GDP by Country in ${year}`,
+                        geo: {
+                            showframe: false,
+                            showcoastlines: false,
+                            projection: {
+                                type: 'mercator'
                             }
-                        };
+                        }
+                    };
 
-                        Plotly.newPlot('worldMap', mapData, mapLayout);
-                    })
-                    .catch(error => {
-                        console.log("Fetch error:", error);
-                    });
-            
+                    Plotly.newPlot('worldMap', mapData, mapLayout);
+                })
+                .catch(error => {
+                    console.log("Fetch error:", error);
+                });
+
         }
 
         // Script for GDP Slider to show the value
         document.getElementById('gdpSlider').oninput = function () {
             document.getElementById('gdpValue').textContent = this.value;
-        }
-
-        // Toggle theme function
-        function toggleTheme() {
-            document.body.classList.toggle("dark-mode");
         }
 
         // Fetch data for the initially selected year
