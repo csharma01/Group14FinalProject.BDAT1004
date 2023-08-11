@@ -1,8 +1,0 @@
-
-D:\world_bank_app>az storage account keys list --resource-group WorldBankAppResourceGroup --account-name worldbankstorageaccount --output table
-CreationTime                      KeyName    Permissions    Value
---------------------------------  ---------  -------------  ----------------------------------------------------------------------------------------
-2023-08-11T06:20:58.122162+00:00  key1       FULL           CCdMklAjL01MKZbW7I07yTQQqm1F24kZh2n0V47B+RSJQVm/kzaKajyGbQh5K+cjWR6DbLUJNytn+AStOOQkNg==
-2023-08-11T06:20:58.122162+00:00  key2       FULL           QrDbkhf8Nb266k2sG+T57L0HPjbBWUztPs+kh6R59E1IS04sC/VUETAn/Mhf6VZsYciQBNAUOH58+AStTzbQeQ==
-
-D:\world_bank_app>
